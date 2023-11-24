@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/haodam/DSAlgorithm/leetcode"
+	leetcode "github.com/haodam/DSAlgorithm/leetcode/1518"
 )
 
 func main() {

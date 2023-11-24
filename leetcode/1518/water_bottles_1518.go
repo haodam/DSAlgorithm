@@ -16,6 +16,7 @@ func NumWaterBottles(numBottles int, numExchange int) int {
 		// drink
 		emptyBottles += numBottles
 		result += numBottles
+
 	}
 	return result
 }
