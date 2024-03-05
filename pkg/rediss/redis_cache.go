@@ -4,15 +4,18 @@ import (
 	"context"
 	"github.com/redis/go-redis/v9"
 	"strconv"
+	"time"
 )
 
 type RedisCache struct {
 	client *redis.Client
+	ttl    time.Duration
 }
 
-func NewRedisCache(c *redis.Client) *RedisCache {
+func NewRedisCache(c *redis.Client, ttl time.Duration) *RedisCache {
 	return &RedisCache{
 		client: c,
+		ttl:    ttl,
 	}
 }
 
@@ -29,7 +32,7 @@ func (c *RedisCache) Get(key int) (string, bool) {
 func (c *RedisCache) Set(key int, val string) error {
 	ctx := context.Background()
 	intStr := strconv.Itoa(key)
-	_, err := c.client.Set(ctx, intStr, val, 0).Result()
+	_, err := c.client.Set(ctx, intStr, val, c.ttl).Result()
 	return err
 }
 

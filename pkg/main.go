@@ -5,6 +5,7 @@ import (
 	"github.com/haodam/DSAlgorithm/pkg/rediss"
 	"github.com/redis/go-redis/v9"
 	"log"
+	"time"
 )
 
 type Store struct {
@@ -62,14 +63,16 @@ func main() {
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
-
-	s := NewStore(rediss.NewRedisCache(rdb))
+	ttl := time.Second * 5
+	s := NewStore(rediss.NewRedisCache(rdb, ttl))
 	for i := 0; i < 2; i++ {
 		val, err := s.Get(3)
 		if err != nil {
 			log.Fatal(err)
 		}
 		fmt.Println(val)
+
+		time.Sleep(5 * time.Second)
 	}
 
 }
