@@ -49,7 +49,49 @@ func Example2() {
 	}
 }
 
+func MulChannel() {
+
+	ch1 := make(chan interface{})
+	close(ch1)
+	ch2 := make(chan interface{})
+	close(ch2)
+
+	var ch1Count, ch2Count int
+	for i := 1000; i >= 0; i-- {
+		select {
+		case <-ch1:
+			ch1Count++
+		case <-ch2:
+			ch2Count++
+		}
+	}
+	fmt.Printf(" ch1Count: %d\n ch2Count: %d\n", ch1Count, ch2Count)
+}
+
+func WaitingOther() {
+	done := make(chan interface{})
+	go func() {
+		time.Sleep(3 * time.Second)
+		fmt.Println("done")
+		close(done)
+	}()
+	workCounter := 0
+loop:
+	for {
+		select {
+		case <-done:
+			break loop
+		default:
+		}
+		fmt.Println(workCounter)
+		workCounter++
+		time.Sleep(1 * time.Second)
+	}
+	fmt.Printf("workCounter %v .\n", workCounter)
+}
+
 func main() {
 	//LeakReceive()
-	Example2()
+	//Example2()
+	MulChannel()
 }
