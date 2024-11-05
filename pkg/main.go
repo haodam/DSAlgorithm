@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/haodam/DSAlgorithm/pkg/rediss"
+	"github.com/haodam/DSAlgorithm/pkg/redis"
 	"github.com/redis/go-redis/v9"
 	"log"
 	"time"
@@ -10,10 +10,10 @@ import (
 
 type Store struct {
 	data  map[int]string
-	cache rediss.Cacher
+	cache redis.Cacher
 }
 
-func NewStore(c rediss.Cacher) *Store {
+func NewStore(c redis.Cacher) *Store {
 	data := map[int]string{
 		1: "Elon Musk is the new owner of Twitter",
 		2: "Foo is not bar and bar is not baz",
@@ -64,7 +64,7 @@ func main() {
 		DB:       0,  // use default DB
 	})
 	ttl := time.Second * 5
-	s := NewStore(rediss.NewRedisCache(rdb, ttl))
+	s := NewStore(redis.NewRedisCache(rdb, ttl))
 	for i := 0; i < 2; i++ {
 		val, err := s.Get(3)
 		if err != nil {

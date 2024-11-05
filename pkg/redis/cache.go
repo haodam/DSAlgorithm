@@ -1,4 +1,4 @@
-package rediss
+package redis
 
 type Cacher interface {
 	Get(int) (string, bool)
