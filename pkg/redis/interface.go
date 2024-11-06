@@ -7,7 +7,7 @@ import (
 )
 
 type RedisEngine interface {
-	Configure(...Option) RedisEngine
+	//Configure(...Option) RedisEngine
 	Client() *redisV9.Client
 	Set(key string, value any, timeToLive ...time.Duration) error
 	Get(key string) ([]byte, bool, error)

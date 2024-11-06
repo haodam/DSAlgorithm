@@ -3,11 +3,12 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"sync"
 	"time"
-	
+
 	redisV9 "github.com/redis/go-redis/v9"
 )
 
@@ -25,6 +26,8 @@ const (
 )
 
 var ctx = context.Background()
+
+var _ RedisEngine = (*redis)(nil)
 
 type RedisConnString string
 
@@ -99,6 +102,8 @@ func (r *redis) Client() *redisV9.Client {
 	return r.client
 }
 
+//type Option func(*redis)
+
 // Configure implements RedisEngine.
 func (r *redis) Configure(opts ...Option) RedisEngine {
 	for _, opt := range opts {
@@ -107,15 +112,13 @@ func (r *redis) Configure(opts ...Option) RedisEngine {
 	return r
 }
 
-var _ RedisEngine = (*redis)(nil)
-
-func NewRedisClient(config *configs.Redis) (RedisEngine, error) {
+func NewRedisClient(password string, host string, port string) (RedisEngine, error) {
 	redis := &redis{
 		poolSize: _poolSize,
 		database: _database,
-		password: config.Password,
+		password: password,
 	}
-	urlRedis := fmt.Sprintf("%s:%s", config.Host, config.Port)
+	urlRedis := fmt.Sprintf("%s:%s", host, port)
 	redis.client = redisV9.NewClient(
 		&redisV9.Options{
 			Addr:            urlRedis,
@@ -134,7 +137,7 @@ func NewRedisClient(config *configs.Redis) (RedisEngine, error) {
 	)
 	_, err := redis.client.Ping(ctx).Result()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to connect redis")
+		return nil, errors.New("failed to connect redis") //errors.Wrap(err, "failed to connect redis")
 	}
 	slog.Info("📫 connected to redis 🎉")
 	return redis, nil
