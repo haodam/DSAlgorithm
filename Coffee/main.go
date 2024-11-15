@@ -1,4 +1,4 @@
-package Coffee
+package main
 
 import "fmt"
 
@@ -25,7 +25,7 @@ import "fmt"
 type CoffeesType int
 
 const (
-	Espresso CoffeesType = iota
+	Espresso CoffeesType = iota + 1
 	Cappuccino
 	Latte
 )
@@ -45,7 +45,6 @@ type Coffee struct {
 
 type CoffeesRepository interface {
 	AddCoffee(coffee Coffee) error
-	UpdateCoffeeQuantity(coffeeType CoffeesType, quantity int) error
 	GetCoffee(coffeeType CoffeesType) (*Coffee, error)
 	GetAllCoffeeAvailable() []Coffee
 }
@@ -54,7 +53,6 @@ type CoffeesRepository interface {
 
 type InMemoryCoffeeRepository struct {
 	coffees map[CoffeesType]*Coffee
-	//observers []Observer
 }
 
 func (repo *InMemoryCoffeeRepository) AddCoffee(coffee Coffee) error {
@@ -70,18 +68,67 @@ func (repo *InMemoryCoffeeRepository) AddCoffee(coffee Coffee) error {
 	return nil
 }
 
-func (repo *InMemoryCoffeeRepository) UpdateCoffeeQuantity(coffeeType CoffeesType, quantity int) error {
-	return nil
-}
-
 func (repo *InMemoryCoffeeRepository) GetCoffee(coffeeType CoffeesType) (*Coffee, error) {
-	return nil, nil
+
+	coffee, found := repo.coffees[coffeeType]
+	if !found {
+		return nil, fmt.Errorf("coffee with type %s does not exist", coffeeType)
+	}
+	return coffee, nil
 }
 
 func (repo *InMemoryCoffeeRepository) GetAllCoffeeAvailable() []Coffee {
-	return nil
+
+	var rs []Coffee
+	for _, coffee := range repo.coffees {
+		rs = append(rs, *coffee)
+	}
+	return rs
 }
 
 func main() {
+	// Khởi tạo repository
+	repo := &InMemoryCoffeeRepository{
+		coffees: make(map[CoffeesType]*Coffee),
+	}
+
+	// Thêm loại cà phê hợp lệ
+	err := repo.AddCoffee(Coffee{
+		Name:  "Espresso",
+		Type:  Espresso,
+		Price: 50000,
+	})
+	if err != nil {
+		fmt.Println("Lỗi:", err)
+	} else {
+		fmt.Println("Thêm cà phê thành công!")
+	}
+
+	// Thêm cà phê với giá không hợp lệ
+	err = repo.AddCoffee(Coffee{
+		Name:  "Invalid Coffee",
+		Type:  Latte,
+		Price: -10000,
+	})
+	if err != nil {
+		fmt.Println("Lỗi:", err)
+	}
+
+	// Thêm cà phê trùng lặp
+	err = repo.AddCoffee(Coffee{
+		Name:  "Espresso",
+		Type:  Espresso,
+		Price: 50000,
+	})
+	if err != nil {
+		fmt.Println("Lỗi:", err)
+	} else {
+		fmt.Println("Thêm cà phê trùng lặp vẫn không lỗi!")
+	}
+
+	// In danh sách cà phê trong repository
+	for coffeeType, coffee := range repo.coffees {
+		fmt.Printf("Loại: %v, Thông tin: %+v\n", coffeeType, *coffee)
+	}
 
 }
