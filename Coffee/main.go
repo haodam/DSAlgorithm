@@ -1,5 +1,7 @@
 package Coffee
 
+import "fmt"
+
 // Designing a Coffee Vending Machine
 
 // The coffee vending machine should support different types of coffee, such as espresso, cappuccino, and latte.
@@ -48,9 +50,36 @@ type CoffeesRepository interface {
 	GetAllCoffeeAvailable() []Coffee
 }
 
+// Lưu giữ dữ liệu vào trong memory thay cho csdl
+
 type InMemoryCoffeeRepository struct {
 	coffees map[CoffeesType]*Coffee
 	//observers []Observer
+}
+
+func (repo *InMemoryCoffeeRepository) AddCoffee(coffee Coffee) error {
+
+	if coffee.Price <= 0 {
+		return fmt.Errorf("coffee price must be positive")
+	}
+
+	_, found := repo.coffees[coffee.Type]
+	if !found {
+		repo.coffees[coffee.Type] = &coffee
+	}
+	return nil
+}
+
+func (repo *InMemoryCoffeeRepository) UpdateCoffeeQuantity(coffeeType CoffeesType, quantity int) error {
+	return nil
+}
+
+func (repo *InMemoryCoffeeRepository) GetCoffee(coffeeType CoffeesType) (*Coffee, error) {
+	return nil, nil
+}
+
+func (repo *InMemoryCoffeeRepository) GetAllCoffeeAvailable() []Coffee {
+	return nil
 }
 
 func main() {
