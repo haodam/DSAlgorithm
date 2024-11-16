@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
 // Designing a Coffee Vending Machine
 
@@ -31,8 +34,8 @@ const (
 )
 
 type Ingredient struct {
-	Ingredient string // Ingredient: Nguyen lieu
-	Quantity   int
+	Name     string // Ingredient: Nguyen lieu
+	Quantity int
 }
 
 type Coffee struct {
@@ -84,6 +87,55 @@ func (repo *InMemoryCoffeeRepository) GetAllCoffeeAvailable() []Coffee {
 		rs = append(rs, *coffee)
 	}
 	return rs
+}
+
+type Observer interface {
+	Update(ingredient Ingredient)
+}
+
+type AdminObserver struct {
+}
+
+func (admin *AdminObserver) Update(ingredient Ingredient) {
+	fmt.Println("\n You have notification")
+	fmt.Printf("Ingredient %s is running low: %d \n", ingredient.Name, ingredient.Quantity)
+}
+
+type Coin struct {
+	Value int
+	Count int
+}
+
+type Payment struct {
+	coins map[int]int
+	mu    *sync.Mutex
+}
+
+type IPayment interface {
+	Payment(coins []Coin) (int, error)
+	ReturnChange(amount int) ([]Coin, error)
+}
+
+func (p *Payment) Payment(coins []Coin) (int, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	// Sao luu trang thai hien tai (phong truong hop khoi phuc)
+	backup := make(map[int]int)
+	for k, v := range p.coins {
+		backup[k] = v
+	}
+
+	total := 0
+	for _, coin := range coins {
+		if coin.Count <= 0 || coin.Value <= 0 {
+			return coin.Value, fmt.Errorf("invalid coin amount")
+		}
+		p.coins[coin.Value] += coin.Count
+		total += coin.Count
+
+	}
+	return total, nil
 }
 
 func main() {
