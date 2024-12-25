@@ -1,8 +1,6 @@
 module github.com/haodam/DSAlgorithm
 
-go 1.21
-
-toolchain go1.22.1
+go 1.23.2
 
 require (
 	cloud.google.com/go/bigquery v1.62.0
