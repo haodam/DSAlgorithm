@@ -16,11 +16,11 @@ type Job interface {
 	Execute(ctx context.Context) error
 	Retry(ctx context.Context) error
 	State() JobState
-	SetRetryDuration(times []time.Duration)
+	SetRetryDurations(times []time.Duration)
 }
 
 const (
-	defaultMaxTimeout = 10 * time.Second
+	defaultMaxTimeout = time.Second * 10
 )
 
 var (
@@ -32,7 +32,7 @@ type JobHandler func(ctx context.Context) error
 type JobState int
 
 const (
-	JobStateInt JobState = iota
+	JobStateInit JobState = iota
 	JobStateRunning
 	JobStateFailed
 	JobStateTimeout
@@ -41,7 +41,7 @@ const (
 )
 
 func (js JobState) String() string {
-	return []string{"Init", "Running", "Failed", "Timeout", "Completed"}[js]
+	return []string{"Init", "Running", "Failed", "Timeout", "Completed", "RetryFailed"}[js]
 }
 
 type JobConfig struct {
@@ -64,7 +64,7 @@ func NewJob(handler JobHandler) *job {
 			Retries:    defaultRetryTime,
 		},
 		handler:    handler,
-		state:      JobStateInt,
+		state:      JobStateInit,
 		retryIndex: -1, // chua retry lan nao het
 		stopChan:   make(chan bool),
 	}
@@ -73,7 +73,7 @@ func NewJob(handler JobHandler) *job {
 
 func (j *job) Execute(ctx context.Context) error {
 
-	j.state = JobStateInt
+	j.state = JobStateRunning
 	var err error
 	err = j.handler(ctx)
 
@@ -84,16 +84,41 @@ func (j *job) Execute(ctx context.Context) error {
 
 	j.state = JobStateCompleted
 	return nil
+
+	// time out cancel job
+	// TO DO:
 }
 
 func (j *job) Retry(ctx context.Context) error {
-	return nil
+
+	j.retryIndex += 1
+	time.Sleep(j.config.Retries[j.retryIndex])
+
+	err := j.Execute(ctx)
+	if err == nil {
+		j.state = JobStateCompleted
+		return nil
+	}
+	if j.retryIndex == len(j.config.Retries)-1 {
+		j.state = JobStateRetryFailed
+		return err
+	}
+
+	j.state = JobStateFailed
+	return err
 }
 
 func (j *job) State() JobState {
-	return 0
+	return j.state
 }
 
-func (j *job) SetRetryDuration(times []time.Duration) {
+func (j *job) RetryIndex() int {
+	return j.retryIndex
+}
 
+func (j *job) SetRetryDurations(times []time.Duration) {
+	if len(times) == 0 {
+		return
+	}
+	j.config.Retries = times
 }
