@@ -2,6 +2,7 @@ package asyncjob
 
 import (
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -83,10 +84,38 @@ func (j *job) Execute(ctx context.Context) error {
 	}
 
 	j.state = JobStateCompleted
-	return nil
 
 	// time out cancel job
 	// TO DO:
+	ch := make(chan error)
+	ctxJob, doneFunc := context.WithCancel(ctx)
+
+	defer doneFunc()
+	go func() {
+		j.state = JobStateRunning
+		var err error
+		err = j.handler(ctxJob)
+		if err != nil {
+			j.state = JobStateFailed
+			ch <- err
+			return
+		}
+		j.state = JobStateCompleted
+		ch <- err
+	}()
+
+	for {
+		select {
+		case <-j.stopChan:
+			break
+		default:
+			fmt.Println("Hello World")
+		}
+	}
+
+	//go func() {}()
+
+	return nil
 }
 
 func (j *job) Retry(ctx context.Context) error {
