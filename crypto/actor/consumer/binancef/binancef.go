@@ -27,14 +27,18 @@ type BinanceF struct {
 }
 
 func (b *BinanceF) Receive(c *actor.Context) {
-	log.Printf("Received message in BinanceF: %v", c.Message())
-	switch c.Message().(type) {
-	case *actor.Started:
+	log.Printf("Received message in BinanceF: %T - %+v", c.Message(), c.Message())
+
+	switch msg := c.Message().(type) {
+	//case *actor.Initialized:
+	//	log.Println("Actor initialized")
+	// Có thể bỏ qua hoặc xử lý nếu cần thiết
+	case actor.Started:
 		log.Println("Actor started message received")
 		b.start(c)
 		b.c = c
 	default:
-		log.Printf("Unhandled message: %v", c.Message())
+		log.Printf("Unhandled message of type: %T - Content: %+v", msg, msg)
 	}
 }
 
