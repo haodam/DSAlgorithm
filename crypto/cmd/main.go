@@ -37,16 +37,17 @@ func (p *Panel) render() {
 
 func main() {
 
-	log.Println("Initializing actor engine...")
+	//log.Println("Initializing actor engine...")
 	e, err := actor.NewEngine(actor.NewEngineConfig())
 	if err != nil {
 		log.Fatal("Failed to initialize actor engine:", err)
 	}
 
-	log.Println("Spawning BinanceF actor...")
+	//log.Println("Spawning BinanceF actor...")
 	e.Spawn(binancef.New(), "binancef")
-	log.Println("Actor system is running. Waiting for messages...")
+	//log.Println("Actor system is running. Waiting for messages...")
 	select {}
+	return
 
 	//rl.InitWindow(1200, 600, "Market Crypto")
 	//defer rl.CloseWindow()

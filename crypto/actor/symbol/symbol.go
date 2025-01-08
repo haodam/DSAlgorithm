@@ -12,7 +12,7 @@ type Symbol struct {
 
 func New(pair event.Pair) actor.Producer {
 	return func() actor.Receiver {
-		log.Printf("Creating new Symbol actor for pair: %+v", pair)
+		//log.Printf("Creating new Symbol actor for pair: %+v", pair)
 		return &Symbol{
 			pair: pair,
 		}
@@ -20,7 +20,7 @@ func New(pair event.Pair) actor.Producer {
 }
 
 func (s *Symbol) Receive(c *actor.Context) {
-	log.Printf("Symbol actor received message: %T", c.Message())
+	//log.Printf("Symbol actor received message: %T", c.Message())
 	switch v := c.Message().(type) {
 	case actor.Started:
 		log.Printf("Symbol actor started for pair: %v", s.pair)
