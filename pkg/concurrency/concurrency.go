@@ -6,28 +6,6 @@ import (
 	"time"
 )
 
-func sliceToChannel(nums []int) <-chan int {
-	c := make(chan int)
-	go func() {
-		for _, num := range nums[1:] {
-			c <- num
-		}
-		close(c)
-	}()
-	return c
-}
-
-func sq(in <-chan int) <-chan int {
-	c := make(chan int)
-	go func() {
-		for num := range in {
-			c <- num * num
-		}
-		close(c)
-	}()
-	return c
-}
-
 func repeatFunc[T any, K any](done <-chan K, fn func() T) <-chan T {
 
 	stream := make(chan T)
@@ -59,32 +37,46 @@ func take[T any, K any](done <-chan K, steam <-chan T, n int) <-chan T {
 	return taken
 }
 
+func primeFinder(done <-chan int, randIntStream <-chan int) <-chan int {
+	isPrime := func(randomInt int) bool {
+		if randomInt < 2 {
+			return false
+		}
+		for i := 2; i*i < randomInt; i++ {
+			if randomInt%i == 0 {
+				return false
+			}
+		}
+		return true
+	}
+	primes := make(chan int)
+	go func() {
+		defer close(primes)
+		for {
+			select {
+			case <-done:
+				return
+			case randomInt := <-randIntStream:
+				if isPrime(randomInt) {
+					primes <- randomInt
+				}
+			}
+		}
+	}()
+	return primes
+}
+
 func main() {
 
-	// input
-	//nums := []int{1, 2, 3, 4, 5}
-
-	// stage 1
-	//datachannel := sliceToChannel(nums)
-
-	// stage 2
-	//finalChannel := sq(datachannel)
-
-	// stage 3
-	// value := range finalChannel {
-	//fmt.Println(value)
-	//}
-
 	start := time.Now()
-	done := make(chan bool)
+	done := make(chan int)
 	defer close(done)
 
-	//nums := runtime.NumCPU()
-
-	randNumFetcher := func() int { return rand.Intn(10000000) }
+	randNumFetcher := func() int { return rand.Intn(500000000) }
 	randIntStream := repeatFunc(done, randNumFetcher)
+	primeStream := primeFinder(done, randIntStream)
 
-	for rando := range take(done, randIntStream, 10) {
+	for rando := range take(done, primeStream, 20) {
 		fmt.Println(rando)
 	}
 	fmt.Println(time.Since(start))
