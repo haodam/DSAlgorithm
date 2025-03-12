@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"runtime"
+	"sync"
 	"time"
 )
 
@@ -66,6 +68,33 @@ func primeFinder(done <-chan int, randIntStream <-chan int) <-chan int {
 	return primes
 }
 
+func fanIn[T any](done <-chan int, channels ...<-chan T) <-chan T {
+
+	var wg sync.WaitGroup
+	fannedIntStream := make(chan T)
+
+	transfer := func(c <-chan T) {
+		defer wg.Done()
+		for i := range c {
+			select {
+			case <-done:
+				return
+			case fannedIntStream <- i:
+			}
+		}
+	}
+	for _, c := range channels {
+		wg.Add(1)
+		go transfer(c)
+	}
+
+	go func() {
+		wg.Wait()
+		close(fannedIntStream)
+	}()
+	return fannedIntStream
+}
+
 func main() {
 
 	start := time.Now()
@@ -74,9 +103,18 @@ func main() {
 
 	randNumFetcher := func() int { return rand.Intn(500000000) }
 	randIntStream := repeatFunc(done, randNumFetcher)
-	primeStream := primeFinder(done, randIntStream)
+	//primeStream := primeFinder(done, randIntStream)
 
-	for rando := range take(done, primeStream, 20) {
+	// Fan out
+	CPUCount := runtime.NumCPU()
+	primeFinderChannels := make([]<-chan int, CPUCount)
+	for i := 0; i < CPUCount; i++ {
+		primeFinderChannels[i] = primeFinder(done, randIntStream)
+	}
+
+	// Fan in
+	fannedInStream := fanIn(done, primeFinderChannels...)
+	for rando := range take(done, fannedInStream, 20) {
 		fmt.Println(rando)
 	}
 	fmt.Println(time.Since(start))
