@@ -1,51 +1,44 @@
 package main
 
-import "fmt"
-
-type UserAuthenicator interface {
-	execute(phone, password string)
-}
-
-// ////////// VERSION 1 ////////////
-type LoginUseCase struct {
-}
-
-func (l LoginUseCase) execute(phone, password string) {
-	fmt.Println("execute v1")
-}
-
-func NewLoginUseCase() LoginUseCase {
-	return LoginUseCase{}
-}
-
-//////////// END VERSION 1 ////////////
-
-// ////////// VERSION 2 ////////////
-type LoginUseCaseV2 struct {
-}
-
-func (l LoginUseCaseV2) execute(phone, password string) {
-	fmt.Println("execute v2")
-}
-
-func NewLoginUseCaseV2() LoginUseCaseV2 {
-	return LoginUseCaseV2{}
-}
-
-//////////// END VERSION 2 ////////////
-
-type UserHandler struct {
-	UseCase UserAuthenicator
-}
-
-func (u UserHandler) login(phone, password string) {
-	u.UseCase.execute(phone, password)
-}
+import (
+	"context"
+	"fmt"
+	"time"
+)
 
 func main() {
-	var userHandler = UserHandler{
-		UseCase: NewLoginUseCaseV2(),
-	}
 
-	userHandler.login("0973901734", "123456")
+	n := 20
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	ch := make(chan int)
+
+	go func(ctx context.Context, n int, ch chan int) {
+		for i := 0; i <= n; i++ {
+			select {
+			case <-ctx.Done():
+				fmt.Println("context canceled")
+				return
+			case num := <-ch:
+				fmt.Println(num)
+				time.Sleep(500 * time.Millisecond)
+			}
+		}
+		cancel()
+	}(ctx, n, ch)
+	fina(ctx, ch)
+
+}
+
+func fina(ctx context.Context, c chan int) {
+	x, y := 0, 1
+	for {
+		select {
+		case c <- x:
+			x, y = y, x+y
+		case <-ctx.Done():
+			fmt.Println("fina stopped")
+			return
+		}
+	}
 }
