@@ -9,25 +9,34 @@ import (
 func main() {
 
 	n := 20
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	ch := make(chan int)
 
-	go func(ctx context.Context, n int, ch chan int) {
-		for i := 0; i <= n; i++ {
+	go func(ctx context.Context, n int, ch chan int, cancelFunc context.CancelFunc) {
+		sum := 0
+		count := 0
+		for {
 			select {
 			case <-ctx.Done():
 				fmt.Println("context canceled")
+				fmt.Printf("Đã nhận %d số Fibonacci\n", count)
 				return
 			case num := <-ch:
 				fmt.Println(num)
-				time.Sleep(500 * time.Millisecond)
+				sum += num
+				count++
+				time.Sleep(100 * time.Millisecond)
+				if count >= n {
+					fmt.Println("sum fibonacci :", sum)
+					cancelFunc()
+					return
+				}
 			}
 		}
-		cancel()
-	}(ctx, n, ch)
-	fina(ctx, ch)
+	}(ctx, n, ch, cancel)
 
+	fina(ctx, ch)
 }
 
 func fina(ctx context.Context, c chan int) {
