@@ -35,7 +35,6 @@ func main() {
 			}
 		}
 	}(ctx, n, ch, cancel)
-
 	fina(ctx, ch)
 }
 
