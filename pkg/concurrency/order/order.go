@@ -22,37 +22,35 @@ type Order struct {
 	mu     sync.Mutex
 }
 
-var (
-	totalUpdates int
-	updateMutex  sync.Mutex
-)
+//var (
+//	totalUpdates int
+//	updateMutex  sync.Mutex
+//)
 
 func main() {
 
 	var wg sync.WaitGroup
-	wg.Add(3)
+	wg.Add(2)
 
-	orders := generateOrders(20)
+	orderChan := make(chan *Order)
 
-	//go func() {
-	//	defer wg.Done()
-	//	processOrders(orders)
-	//}()
+	//orders := generateOrders(20)
 
-	for i := 0; i < 3; i++ {
-		go func() {
-			defer wg.Done()
-			for _, order := range orders {
-				updateOrderStatuses(order)
-			}
-		}()
-	}
+	go func() {
+		defer wg.Done()
+		for _, order := range generateOrders(20) {
+			orderChan <- order
+		}
+		close(orderChan)
+	}()
 
-	reportOrderStatus(orders)
+	go processOrders(orderChan, &wg)
+
+	//reportOrderStatus(orderChan)
 
 	wg.Wait()
 	fmt.Println("All operations completed. Exiting.")
-	fmt.Println("Total updates: ", totalUpdates)
+	//fmt.Println("Total updates: ", totalUpdates)
 
 }
 
@@ -71,17 +69,21 @@ func updateOrderStatuses(order *Order) {
 	fmt.Printf("Updated order %d status: %s\n", order.ID, newStatus)
 	order.mu.Unlock()
 
-	updateMutex.Lock()
-	defer updateMutex.Unlock()
-	currentUpdates := totalUpdates
-	time.Sleep(5 * time.Millisecond)
-	totalUpdates = currentUpdates + 1
+	//updateMutex.Lock()
+	//defer updateMutex.Unlock()
+	//currentUpdates := totalUpdates
+	//time.Sleep(5 * time.Millisecond)
+	//totalUpdates = currentUpdates + 1
 }
 
-func processOrders(order []*Order) {
-	for _, order := range order {
-		time.Sleep(
-			time.Duration(rand.Intn(500)) * time.Millisecond)
+// orderChan <-chan *Order kenh chi nhan gia tri khong gui gia tri
+// orderChan chan <- *Order kenh chi gui gia tri
+// orderChan chan *Order kenh vua nhan va gui gia tri
+
+func processOrders(orderChan <-chan *Order, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for order := range orderChan {
+		time.Sleep(time.Duration(rand.Intn(500)) * time.Millisecond)
 		fmt.Printf("Processing orders %d\n", order.ID)
 	}
 }
