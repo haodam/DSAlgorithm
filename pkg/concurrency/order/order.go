@@ -29,10 +29,12 @@ type Order struct {
 
 func main() {
 
+	rand.Seed(time.Now().UTC().UnixNano())
 	var wg sync.WaitGroup
 	wg.Add(2)
 
 	orderChan := make(chan *Order)
+	processedChan := make(chan *Order)
 
 	//orders := generateOrders(20)
 
@@ -44,7 +46,25 @@ func main() {
 		close(orderChan)
 	}()
 
-	go processOrders(orderChan, &wg)
+	go processOrders(orderChan, processedChan, &wg)
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case processedOrder, ok := <-processedChan:
+				if !ok {
+					fmt.Println("processedChan closed")
+					return
+				}
+				fmt.Printf("processed Order %d with status: %s\n:",
+					processedOrder.ID, processedOrder.Status)
+			case <-time.After(time.Second):
+				fmt.Println("Timeout waiting for order")
+				return
+			}
+		}
+	}()
 
 	//reportOrderStatus(orderChan)
 
@@ -56,6 +76,7 @@ func main() {
 
 func updateOrderStatuses(order *Order) {
 	order.mu.Lock()
+	defer order.mu.Unlock()
 	statusOptions := []StatusOrder{
 		StatusPending,
 		StatusShipped,
@@ -67,24 +88,22 @@ func updateOrderStatuses(order *Order) {
 	newStatus := statusOptions[rand.Intn(len(statusOptions))]
 	order.Status = newStatus
 	fmt.Printf("Updated order %d status: %s\n", order.ID, newStatus)
-	order.mu.Unlock()
-
-	//updateMutex.Lock()
-	//defer updateMutex.Unlock()
-	//currentUpdates := totalUpdates
-	//time.Sleep(5 * time.Millisecond)
-	//totalUpdates = currentUpdates + 1
 }
 
 // orderChan <-chan *Order kenh chi nhan gia tri khong gui gia tri
 // orderChan chan <- *Order kenh chi gui gia tri
 // orderChan chan *Order kenh vua nhan va gui gia tri
 
-func processOrders(orderChan <-chan *Order, wg *sync.WaitGroup) {
-	defer wg.Done()
-	for order := range orderChan {
+func processOrders(inChan <-chan *Order, outChan chan<- *Order, wg *sync.WaitGroup) {
+	defer func() {
+		wg.Done()
+		close(outChan)
+	}()
+	for order := range inChan {
 		time.Sleep(time.Duration(rand.Intn(500)) * time.Millisecond)
-		fmt.Printf("Processing orders %d\n", order.ID)
+		order.Status = "Processing"
+		//updateOrderStatuses(order)
+		outChan <- order
 	}
 }
 
