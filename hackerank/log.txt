@@ -1,0 +1,7 @@
+2023-10-01 12:00:00 INFO: System started
+2023-10-01 12:01:00 DEBUG: Initializing components
+2023-10-01 12:02:00 ERROR: Failed to connect to database
+2023-10-01 12:03:00 INFO: Retry connection
+2023-10-01 12:04:00 ERROR: Connection timeout
+2023-10-01 12:05:00 INFO: Connection established
+2023-10-01 12:06:00 DEBUG: Processing data
