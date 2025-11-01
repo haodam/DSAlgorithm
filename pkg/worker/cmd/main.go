@@ -31,7 +31,7 @@ func main() {
 
 	// create a worker pool
 	worker := worker_pool.NewWorkerPool[string](ctx,
-		worker_pool.WithMaxWorkers(20),
+		worker_pool.WithMaxWorkers(10),
 		worker_pool.WithTimeout(10*time.Minute),
 	)
 

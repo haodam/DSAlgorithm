@@ -36,6 +36,14 @@ type WorkerPoolConfig struct {
 	StopOnError bool
 }
 
+// resultTask wraps a Task with individual result and error channels
+
+type ResultTask[T any] struct {
+	task     Task[T]
+	resultCh chan T
+	errorCh  chan error
+}
+
 // WithMaxWorkers sets the maximum number of concurrent workers
 func WithMaxWorkers(n int) WorkerPoolOption {
 	return func(c *WorkerPoolConfig) {
@@ -109,6 +117,34 @@ func NewCPUExecutor[T any](ctx context.Context, opts ...WorkerPoolOption) *Worke
 	cpuWorkers := runtime.GOMAXPROCS(0)
 	opts = append([]WorkerPoolOption{WithMaxWorkers(cpuWorkers)}, opts...)
 	return NewWorkerPool[T](ctx, opts...)
+}
+
+// SubmitAsync submits a task to be processed asynchronously (fire-and-forget)
+func (wp *WorkerPool[T]) SubmitAsync(task Task[T]) error {
+	return wp.Submit(task)
+}
+
+// SubmitAndWait submits a task and waits for its result or error
+func (wp *WorkerPool[T]) SubmitAndWait(task Task[T]) (T, error) {
+
+	resultCh := make(chan T, 1)
+	errorCh := make(chan error, 1)
+
+	rt := ResultTask[T]{
+		task:     task,
+		resultCh: resultCh,
+		errorCh:  errorCh,
+	}
+
+	// Submit in pool
+	select {
+	case wp.taskQueue <- rt:
+	case <-wp.ctx.Done():
+		var zero T
+		return zero, fmt.Errorf("worker pool is closed or context cancelled")
+	}
+
+	return nil, nil
 }
 
 // Submit adds a task to the worker_pool pool
