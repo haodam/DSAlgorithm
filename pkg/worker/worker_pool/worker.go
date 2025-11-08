@@ -125,27 +125,27 @@ func (wp *WorkerPool[T]) SubmitAsync(task Task[T]) error {
 }
 
 // SubmitAndWait submits a task and waits for its result or error
-func (wp *WorkerPool[T]) SubmitAndWait(task Task[T]) (T, error) {
-
-	resultCh := make(chan T, 1)
-	errorCh := make(chan error, 1)
-
-	rt := ResultTask[T]{
-		task:     task,
-		resultCh: resultCh,
-		errorCh:  errorCh,
-	}
-
-	// Submit in pool
-	select {
-	case wp.taskQueue <- rt:
-	case <-wp.ctx.Done():
-		var zero T
-		return zero, fmt.Errorf("worker pool is closed or context cancelled")
-	}
-
-	return nil, nil
-}
+//func (wp *WorkerPool[T]) SubmitAndWait(task Task[T]) (T, error) {
+//
+//	resultCh := make(chan T, 1)
+//	errorCh := make(chan error, 1)
+//
+//	rt := ResultTask[T]{
+//		task:     task,
+//		resultCh: resultCh,
+//		errorCh:  errorCh,
+//	}
+//
+//	// Submit in pool
+//	select {
+//	case wp.taskQueue <- rt:
+//	case <-wp.ctx.Done():
+//		var zero T
+//		return zero, fmt.Errorf("worker pool is closed or context cancelled")
+//	}
+//
+//	return nil, nil
+//}
 
 // Submit adds a task to the worker_pool pool
 func (wp *WorkerPool[T]) Submit(task Task[T]) error {

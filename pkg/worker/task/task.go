@@ -16,5 +16,5 @@ func (t *InsertDB) Process(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("Insertef: %s", t.Data), nil
+	return fmt.Sprintf("Inserted: %s", t.Data), nil
 }
