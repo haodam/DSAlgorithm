@@ -89,7 +89,7 @@ func (wp *WorkerPool[T]) ShutdownGracefully(drainTimeout time.Duration) error {
 
 	wp.shutdown = true
 
-	// Don't close task queue yet - drain first
+	// Don't close the task queue yet - drain first
 	wp.mu.Unlock()
 
 	// Drain remaining tasks
@@ -175,14 +175,14 @@ func (wp *WorkerPool[T]) ShutdownOnSignal(signals ...os.Signal) error {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, signals...)
 
-	// Wait for signal
+	// Wait for a signal
 	<-sigChan
 
 	// Shutdown gracefully
 	return wp.ShutdownGracefully(30 * time.Second)
 }
 
-// ShutdownOnSignalAsync starts graceful shutdown on signal in a goroutine
+// ShutdownOnSignalAsync starts a graceful shutdown on signal in a goroutine
 func (wp *WorkerPool[T]) ShutdownOnSignalAsync(signals ...os.Signal) <-chan error {
 	errChan := make(chan error, 1)
 

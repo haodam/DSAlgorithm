@@ -28,8 +28,8 @@ type WorkerPool[T any] struct {
 	ctx         context.Context    // context for pool
 	cancel      context.CancelFunc // cancel pool context
 	mu          sync.RWMutex       // mutex for thread safety
-	started     bool               // flag to track if pool is started
-	shutdown    bool               // flag to track if pool is shutdown
+	started     bool               // flag to track if the pool is started
+	shutdown    bool               // flag to track if the pool is shutdown
 
 	// Enhanced features
 	priorityQueue  *PriorityQueueManager[T] // Priority queue (optional)
@@ -118,7 +118,7 @@ func NewWorkerPool[T any](ctx context.Context, options ...WorkerPoolOption) *Wor
 	bufferSize := calculateOptimalBufferSize(config.MaxWorkers)
 
 	// For priority queue, use unbuffered channel
-	// For regular queue, use small buffer to avoid blocking on submit
+	// For regular queue, use a small buffer to avoid blocking on submitting
 	taskQueueSize := 0
 	if !config.EnablePriority {
 		// Small buffer for regular queue to reduce blocking
@@ -353,7 +353,7 @@ func (wp *WorkerPool[T]) worker() {
 		duration := time.Since(startTime)
 
 		// Check if this is a WaitableTask (SubmitAndWait)
-		// WaitableTask handles its own result/error channels, so we don't need to send to pool channels
+		// WaitableTask handles its own result/error channels, so we don't need to send it to pool channels
 		_, isWaitableTask := task.(*WaitableTask[T])
 
 		if err != nil {
@@ -372,8 +372,8 @@ func (wp *WorkerPool[T]) worker() {
 				wp.metrics.RecordTaskCompleted(duration)
 			}
 
-			// Only send to pool error channel if not a WaitableTask
-			// WaitableTask handles its own error channel
+			// Only send it to a pool error channel if not a WaitableTask
+			//  handles its own error channel
 			if !isWaitableTask {
 				select {
 				case wp.errors <- err:
@@ -394,8 +394,8 @@ func (wp *WorkerPool[T]) worker() {
 			wp.metrics.RecordTaskCompleted(duration)
 		}
 
-		// Only send to pool result channel if not a WaitableTask
-		// WaitableTask handles its own result channel
+		// Only send it to a pool result channel if not a WaitableTask
+		//  handles its own result channel
 		if !isWaitableTask {
 			select {
 			case wp.results <- result:
