@@ -14,7 +14,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	fmt.Println("Processing...", os.Getgid())
+	fmt.Println("Processing...", os.Getpid())
 
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
