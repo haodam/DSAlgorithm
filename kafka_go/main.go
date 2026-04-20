@@ -3,43 +3,60 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"net"
 	"os"
+	"strconv"
 )
 
 func main() {
-	// startServer()
 	fmt.Println(os.Args)
 	if os.Args[1] == "server" {
-		startServer()
+		var broker = Broker{}
+		err := broker.startBrokerServer()
+		if err != nil {
+			fmt.Printf("Error starting broker: %v\n", err.Error())
+		}
+	} else if os.Args[1] == "producer" {
+		fmt.Println("Trying to start producer processes")
+		_, err := strconv.ParseInt(os.Args[2], 10, 32)
+		if err != nil {
+			panic(err)
+		}
+		//producer := Producer{}
+		//producer.startProducerServer(int16(port))
 	} else {
-		clientConnect()
+		clientConnectTCPAndEcho(10000)
 	}
 }
 
-func startServer() {
-	ln, _ := net.Listen("tcp", ":1234")
-	conn, _ := ln.Accept() // Block until can
-	conn.Close()
-}
-
-func clientConnect() {
-	conn, _ := net.Dial("tcp", ":1234")
-
-	// Read from stdin in a line
+func clientConnectTCPAndEcho(port int) {
+	conn, _ := net.Dial("tcp", fmt.Sprintf(":%d", port))
+	fmt.Printf("Connected to server at port %v\n", port)
+	// Read input from stdin and write to stream.
 	rd := bufio.NewReader(os.Stdin)
+	streamRw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
 	line, err := rd.ReadString('\n')
 	if err != nil {
-		return
+		if err == io.EOF {
+			return
+		} else {
+			// Probably panic here
+		}
+	}
+	message := Message{
+		ECHO: &line,
+	}
+	err = writeMessageToStream(streamRw, message)
+	if err != nil {
+		panic(err)
 	}
 
-	fmt.Printf("Send to server: %s\n", line)
+	// Try to read back from the stream
+	resp, err := readMessageFromStream(streamRw)
+	if err != nil {
+		panic(err)
+	}
 
-	// Write to server
-	streamWr := bufio.NewWriter(conn)
-	streamWr.WriteByte(byte(len(line)))
-	streamWr.WriteString(line)
-	streamWr.Flush()
-
-	conn.Close()
+	fmt.Printf("Receive message from server: %s\n", *resp.R_ECHO)
 }
