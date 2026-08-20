@@ -12,6 +12,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/joho/godotenv v1.5.1
 	github.com/redis/go-redis/v9 v9.3.0
+	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.9.0
 	github.com/valyala/fastjson v1.6.4
 	golang.org/x/exp v0.0.0-20250103183323-7d7fa50e5329
@@ -44,6 +45,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
 	github.com/googleapis/gax-go/v2 v2.13.0 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
@@ -51,6 +53,7 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.18 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
+	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.54.0 // indirect
